@@ -21,6 +21,11 @@ GroundingDINO/
 recognize-anything/
 Grounded-Segment-Anything/
 
+
+# Our Ignores
+train-data/
+.*json
+
 # some debugging codes
 debug.ipynb
 
@@ -101,7 +106,8 @@ target/
 # pretrained models
 videocutler/pretrain
 yolov8m-seg.pt
-pretrained/instancediffusion_sd15*.pth
+pretrained/instancediffusion_sd15.pth
+pretrained/instancediffusion_sd15_.pth
 # *.pth
 
 # env setup files

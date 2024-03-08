@@ -29,9 +29,11 @@ def parse_args():
 
 def get_shared_folder():
     user = os.getenv("USER")
-    if Path("/fsx-muvigen/").is_dir():
-        p = Path('/fsx-muvigen/{}/Grounded-Segment-Anything/submitit'.format(user))
-        p.mkdir(exist_ok=True)
+    # Replace "/fsx-muvigen/" with a directory path that exists on your system
+    shared_base_path = "C:/Users/Rasmu/Repos/InstanceDiffusion-main"
+    if Path(shared_base_path).is_dir():
+        p = Path(f'{shared_base_path}/{user}/Grounded-Segment-Anything/submitit')
+        p.mkdir(parents=True, exist_ok=True)
         return p
     raise RuntimeError("No shared folder available")
 
@@ -82,7 +84,8 @@ class Trainer(object):
 def main():
     args = parse_args()
     if args.job_dir == "":
-        args.job_dir = get_shared_folder() / "%j"
+        args.job_dir = get_shared_folder() / "%j" 
+          
 
     # Note that the folder will depend on the job_id, to easily track experiments
     executor = submitit.AutoExecutor(folder=args.job_dir, slurm_max_num_timeout=30)

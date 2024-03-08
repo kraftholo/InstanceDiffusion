@@ -27,8 +27,9 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append('../Grounded-Segment-Anything')
 sys.path.append('../Grounded-Segment-Anything/Tag2Text')
-from Tag2Text.models import tag2text
-from Tag2Text import inference_ram
+#sys.path.append('../recognize-anything')
+from Tag2Text.models import tag2text, ram #changed from Tag2Text
+from Tag2Text import inference #changed from Tag2Text
 import torchvision.transforms as TS
 
 import base64
@@ -41,6 +42,9 @@ from transformers import CLIPProcessor, CLIPModel
 from pycocotools import mask as mask_pycoco
 import pycocotools.mask as mask_util
 import webdataset as wds
+
+# Progress bar
+from tqdm import tqdm
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -341,7 +345,7 @@ def get_args_parser():
     parser.add_argument(
         "--use_sam_hq", action="store_true", help="using sam-hq for prediction"
     )
-    parser.add_argument("--input_image", type=str, required=True, help="path to image file")
+    parser.add_argument("--input_image", type=str, required=False, help="path to image file")
     parser.add_argument("--split", default=",", type=str, help="split for text prompt")
     parser.add_argument("--openai_key", type=str, help="key for chatgpt")
     parser.add_argument("--openai_proxy", default=None, type=str, help="proxy for chatgpt")
@@ -388,9 +392,9 @@ def main(args):
                 ])
 
     # load model
-    ram_model = tag2text.ram(pretrained=ram_checkpoint,
+    ram_model = ram(pretrained=ram_checkpoint,
                                         image_size=384,
-                                        vit='swin_l')
+                                        vit='swin_l') #changed from tag2text.ram
     # threshold for tagging
     # we reduce the threshold to obtain more tags
     ram_model.eval()
@@ -433,11 +437,11 @@ def main(args):
     print("start_idx, end_idx", start_idx, end_idx)
 
     # iterate over all images
-    for image_path, image_caption in zip(image_paths[start_idx:end_idx], image_captions[start_idx:end_idx]):
+    for image_path, image_caption in tqdm(zip(image_paths[start_idx:end_idx], image_captions[start_idx:end_idx])):
         img_meta_data = {} # store image meta data
         # dataset = wds.WebDataset([tar]).decode("pil")
-        img_name_base = image_path.split("/")[-1].split(".")[0]
-
+        img_name_base = image_path.split("/")[-1][:-4]
+        # C:/Users/Rasmu/Repos/InstanceDiffusion/dataset_stuff/GCI_Front_With_Duplications_100/Cam=F-FN=20230705.102949.770233_White-SVID=FullView-PID=-x=0000-y=0000-w=1088-h=1456_1.png
         # read image and convert to RGB image using PIL
         image_pil = Image.open(image_path).convert("RGB")  # load image
 
@@ -461,7 +465,7 @@ def main(args):
         # run RAM model
         raw_image = image_pil.resize((384, 384))
         raw_image  = transform(raw_image).unsqueeze(0).to(device)
-        res = inference_ram.inference(raw_image , ram_model)
+        res = inference.inference_ram(raw_image , ram_model)
 
         # Currently ", " is better for detecting single tags
         # while ". " is a little worse in some case
